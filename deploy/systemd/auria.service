@@ -1,0 +1,17 @@
+[Unit]
+Description=Auria Agent (AURIA controller)
+After=network.target
+
+[Service]
+Type=simple
+User=auria
+WorkingDirectory=/opt/auria
+Environment=RUST_LOG=info
+Environment=AURIA_BIND=0.0.0.0:8787
+Environment=AURIA_NODE_URLS=http://127.0.0.1:8080
+ExecStart=/opt/auria/auria serve --bind 0.0.0.0:8787
+Restart=always
+RestartSec=2
+
+[Install]
+WantedBy=multi-user.target

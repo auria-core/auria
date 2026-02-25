@@ -1,0 +1,36 @@
+[package]
+name = "auria"
+version = "0.1.0"
+edition = "2021"
+license = "MIT"
+description = "AURIA agent/controller crate (production skeleton) for AURIA Runtime deployments"
+repository = "https://github.com/auria-core/auria.git"
+
+[[bin]]
+name = "auria"
+path = "src/main.rs"
+
+[dependencies]
+anyhow = "1"
+thiserror = "1"
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+tokio = { version = "1", features = ["rt-multi-thread", "macros", "signal", "time"] }
+tracing = "0.1"
+tracing-subscriber = { version = "0.3", features = ["env-filter"] }
+clap = { version = "4", features = ["derive"] }
+
+# HTTP server/client
+axum = { version = "0.7", features = ["macros"] }
+tower = "0.5"
+tower-http = { version = "0.5", features = ["trace", "cors"] }
+reqwest = { version = "0.12", features = ["json", "gzip", "brotli", "rustls-tls"] }
+
+# Config
+figment = { version = "0.10", features = ["env", "toml", "json"] }
+url = "2"
+uuid = { version = "1", features = ["v4", "serde"] }
+time = { version = "0.3", features = ["serde"] }
+
+[dev-dependencies]
+hyper = "1"

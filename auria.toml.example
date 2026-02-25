@@ -1,0 +1,6 @@
+# Example config file. Copy to auria.toml if desired.
+
+bind = "127.0.0.1:8787"
+node_urls = ["http://127.0.0.1:8080"]
+default_tier = "STANDARD"
+max_cost_microusdc = 0
