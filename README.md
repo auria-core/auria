@@ -56,4 +56,4 @@ Environment variables (all optional):
 
 ## License
 
-MIT
+DOSL
