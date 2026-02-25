@@ -1,5 +1,6 @@
 use figment::{
-    providers::{Env, Format, Json, Toml},
+    providers::{Env, Format, Json, Serialized, Toml},
+    value::Uncased,
     Figment,
 };
 use serde::{Deserialize, Serialize};
@@ -42,12 +43,12 @@ impl AppConfig {
         //   AURIA_NODE_URLS (comma-separated)
         //   AURIA_DEFAULT_TIER
         //   AURIA_MAX_COST_MICROUSDC
-        let fig = Figment::from(AppConfig::default())
+        let fig = Figment::from(Serialized::from(AppConfig::default(), "auria"))
             .merge(Toml::file("auria.toml").nested())
             .merge(Json::file("auria.json").nested())
             .merge(
                 Env::prefixed("AURIA_")
-                    .map(|k| k.to_ascii_lowercase())
+                    .map(|k| Uncased::new(k.as_str().to_ascii_lowercase()))
                     .split(","),
             );
 
@@ -69,7 +70,9 @@ impl AppConfig {
             cfg.default_tier = Tier::parse(&v).unwrap_or(cfg.default_tier);
         }
         if let Ok(v) = std::env::var("AURIA_MAX_COST_MICROUSDC") {
-            if let Ok(n) = v.parse::<u64>() { cfg.max_cost_microusdc = n; }
+            if let Ok(n) = v.parse::<u64>() {
+                cfg.max_cost_microusdc = n;
+            }
         }
 
         Ok(cfg)

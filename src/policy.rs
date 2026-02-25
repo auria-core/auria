@@ -13,6 +13,7 @@ pub struct PolicyDecision {
 /// - tier parsing
 /// - cost guard hooks
 /// - request shaping
+#[derive(Clone, Debug, Serialize, Deserialize)]
 pub struct PolicyEngine {
     pub default_tier: Tier,
     pub max_cost_microusdc: u64,
@@ -28,6 +29,11 @@ impl PolicyEngine {
             // Hook point for: estimate_cost(tier, max_tokens) > max_cost
         }
 
-        PolicyDecision { tier, max_tokens, allowed: true, deny_reason: None }
+        PolicyDecision {
+            tier,
+            max_tokens,
+            allowed: true,
+            deny_reason: None,
+        }
     }
 }
