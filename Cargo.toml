@@ -2,7 +2,7 @@
 name = "auria"
 version = "0.1.0"
 edition = "2021"
-license = "MIT"
+license = "Apache-2.0"
 description = "AURIA agent/controller crate (production skeleton) for AURIA Runtime deployments"
 repository = "https://github.com/auria-core/auria.git"
 
