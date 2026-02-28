@@ -1,3 +1,9 @@
+// File: main.rs - This file is part of AURIA
+// Copyright (c) 2026 AURIA Developers and Contributors
+// Description:
+//     Command-line interface for the AURIA agent controller.
+//     Supports serve, config inspection, and node connectivity checks.
+//
 use clap::{Parser, Subcommand};
 use tracing::{info};
 

@@ -1,3 +1,9 @@
+// File: node_client.rs - This file is part of AURIA
+// Copyright (c) 2026 AURIA Developers and Contributors
+// Description:
+//     HTTP client for communicating with remote Auria Nodes.
+//     Handles request/response serialization for generation calls.
+//
 use crate::models::Tier;
 use serde::{Deserialize, Serialize};
 use url::Url;

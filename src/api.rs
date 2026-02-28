@@ -1,3 +1,9 @@
+// File: api.rs - This file is part of AURIA
+// Copyright (c) 2026 AURIA Developers and Contributors
+// Description:
+//     HTTP API server using Axum framework for OpenAI-compatible
+//     chat completion endpoints.
+//
 use axum::{
     extract::State,
     http::StatusCode,

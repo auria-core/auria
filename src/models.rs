@@ -1,3 +1,9 @@
+// File: models.rs - This file is part of AURIA
+// Copyright (c) 2026 AURIA Developers and Contributors
+// Description:
+//     Data models for OpenAI-compatible API types including
+//     chat completions, messages, tiers, and usage tracking.
+//
 use serde::{Deserialize, Serialize};
 use uuid::Uuid;
 

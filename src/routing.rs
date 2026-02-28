@@ -1,5 +1,11 @@
-use crate::node_client::NodeClient;
+// File: routing.rs - This file is part of AURIA
+// Copyright (c) 2026 AURIA Developers and Contributors
+// Description:
+//     Node routing logic for distributing requests across
+//     multiple Auria Nodes using round-robin or other strategies.
+//
 use crate::models::Tier;
+use crate::node_client::NodeClient;
 
 /// Routing strategy for selecting an Auria Node.
 /// Production: use EWMA latency, capacity, tier support, stake, and reputation.
@@ -25,6 +31,10 @@ pub struct NodePool {
 }
 
 impl NodePool {
-    pub fn len(&self) -> usize { self.nodes.len() }
-    pub fn get(&self, idx: usize) -> &NodeClient { &self.nodes[idx % self.nodes.len()] }
+    pub fn len(&self) -> usize {
+        self.nodes.len()
+    }
+    pub fn get(&self, idx: usize) -> &NodeClient {
+        &self.nodes[idx % self.nodes.len()]
+    }
 }

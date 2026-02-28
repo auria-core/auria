@@ -1,3 +1,9 @@
+// File: config.rs - This file is part of AURIA
+// Copyright (c) 2026 AURIA Developers and Contributors
+// Description:
+//     Application configuration handling using Figment for
+//     multi-source configuration (TOML, JSON, environment variables).
+//
 use figment::{
     providers::{Env, Format, Json, Serialized, Toml},
     value::Uncased,

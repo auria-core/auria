@@ -1,3 +1,9 @@
+// File: agent.rs - This file is part of AURIA
+// Copyright (c) 2026 AURIA Developers and Contributors
+// Description:
+//     Main agent implementation that coordinates policy enforcement,
+//     node routing, and LLM request handling.
+//
 use crate::{
     config::AppConfig,
     models::{ChatCompletionRequest, ChatCompletionResponse, ChatMessage, Choice, Usage, new_id, Tier},

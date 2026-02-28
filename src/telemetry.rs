@@ -1,3 +1,9 @@
+// File: telemetry.rs - This file is part of AURIA
+// Copyright (c) 2026 AURIA Developers and Contributors
+// Description:
+//     Tracing and logging initialization using tracing_subscriber.
+//     Configures environment-based log filtering.
+//
 use tracing_subscriber::EnvFilter;
 
 pub fn init_tracing() {

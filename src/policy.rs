@@ -1,3 +1,9 @@
+// File: policy.rs - This file is part of AURIA
+// Copyright (c) 2026 AURIA Developers and Contributors
+// Description:
+//     Policy engine for request tier enforcement and cost limiting.
+//     Validates tier requests and enforces maximum cost constraints.
+//
 use crate::models::Tier;
 use serde::{Deserialize, Serialize};
 
