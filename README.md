@@ -1,4 +1,4 @@
-# auria — Agent crate for AURIA Runtime
+# AURIA — Agent crate for AURIA Runtime
 
 This repository contains a **production-oriented Rust skeleton** for an `auria` crate designed to act as
 the **agent/controller** for an AURIA Runtime deployment.
