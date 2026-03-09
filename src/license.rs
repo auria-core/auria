@@ -6,8 +6,8 @@
 //
 use std::collections::HashMap;
 use std::sync::{Arc, Mutex};
-use sha2::{Sha256, Digest};
 use rand::Rng;
+use auria_security::crypto::{self, Signature as AuriaSignature, PublicKey as AuriaPublicKey};
 
 #[derive(Debug, Clone)]
 pub struct License {
@@ -59,18 +59,17 @@ impl LicenseManager {
     }
 
     fn verify_signature(&self, license: &License) -> bool {
-        // In production, this would verify the cryptographic signature
-        // For now, we'll use a simple hash check as a placeholder
-        let mut hasher = Sha256::new();
-        hasher.update(&license.shard_id);
-        hasher.update(&license.node_pubkey);
-        hasher.update(&license.expiry_timestamp.to_be_bytes());
+        // Get the node's public key from the license itself
+        let pubkey = AuriaPublicKey(license.node_pubkey);
+        let sig = AuriaSignature(license.signature);
 
-        let hash = hasher.finalize();
+        let mut data = Vec::new();
+        data.extend_from_slice(&license.shard_id);
+        data.extend_from_slice(&license.node_pubkey);
+        data.extend_from_slice(&license.expiry_timestamp.to_le_bytes());
 
-        // Signature verification would compare against a public key
-        // For now, we'll just check that the signature is not all zeros
-        !license.signature.iter().all(|&x| x == 0)
+        crypto::verify_signature(&pubkey, &data, &sig)
+            .unwrap_or(false)
     }
 
     fn current_timestamp() -> u64 {
