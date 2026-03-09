@@ -12,5 +12,13 @@ pub mod routing;
 pub mod agent;
 pub mod api;
 pub mod telemetry;
+pub mod assembly;
+pub mod execution;
+pub mod storage;
+pub mod license;
+pub mod storage_interface;
 
 pub use agent::AuriaAgent;
+pub use assembly::ExpertAssembler;
+pub use execution::ExecutionCore;
+pub use storage_interface::{Storage, StorageConfig, StorageBackend};
