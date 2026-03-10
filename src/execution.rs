@@ -8,7 +8,7 @@ use std::collections::HashMap;
 use std::sync::{Arc, Mutex};
 use uuid::Uuid;
 
-use crate::storage::{Tensor, DevicePointer, DeviceType};
+use crate::core::{Tensor, DevicePointer, DeviceType};
 use crate::assembly::{ExpertTensor, AssemblyRequest};
 
 #[derive(Debug, Clone)]
@@ -42,7 +42,7 @@ pub struct ExecutionStream {
     pub stream_id: u64,
 }
 
-#[derive(Debug, Clone, PartialEq, Eq)]
+#[derive(Debug, Clone, PartialEq, Eq, Hash)]
 pub enum BackendType {
     CPU,
     CUDA,
@@ -58,7 +58,7 @@ pub struct ExecutionCore {
 
 impl ExecutionCore {
     pub fn new() -> Self {
-        let mut backends = HashMap::new();
+        let mut backends: HashMap<BackendType, Arc<dyn ExecutionBackend>> = HashMap::new();
 
         // Register available backends
         backends.insert(BackendType::CPU, Arc::new(CPUBackend::new()));

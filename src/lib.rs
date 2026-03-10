@@ -14,6 +14,7 @@ pub mod api;
 pub mod telemetry;
 pub mod assembly;
 pub mod execution;
+pub mod core;
 pub mod storage;
 pub mod license;
 pub mod storage_interface;

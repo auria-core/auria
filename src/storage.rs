@@ -2,42 +2,16 @@
 // Copyright (c) 2026 AURIA Developers and Contributors
 // Description:
 //     Storage subsystem for managing shard and expert storage lifecycle.
-//     Implements the Model Store (AMS) as defined in the specification.
+//     Implements the persistent Model Store (AMS) as defined in the specification.
+//     The core data types are defined in the `core` module.
 //
 use std::collections::HashMap;
 use std::sync::{Arc, Mutex};
-use uuid::Uuid;
-use crate::storage_interface::{Storage, StorageConfig, StorageBackend};
+use auria_core::AuriaResult;
+use crate::core::{Shard, ShardId, ExpertId, ExpertDefinition, TensorDType};
+use crate::storage_interface::{Storage, StorageConfig, StorageBackend, StorageStats};
 
-#[derive(Debug, Clone, PartialEq, Eq, Hash)]
-pub struct ShardId([u8; 32]);
-
-#[derive(Debug, Clone, PartialEq, Eq, Hash)]
-pub struct ExpertId([u8; 32]);
-
-#[derive(Debug, Clone)]
-pub struct Shard {
-    pub id: ShardId,
-    pub tensor: Tensor,
-    pub metadata: ShardMetadata,
-}
-
-#[derive(Debug, Clone)]
-pub struct ShardMetadata {
-    pub shard_order: u32,
-    pub dtype: TensorDType,
-    pub dimensions: Vec<u32>,
-    pub creation_timestamp: u64,
-}
-
-#[derive(Debug, Clone)]
-pub struct ExpertDefinition {
-    pub id: ExpertId,
-    pub shard_ids: Vec<ShardId>,
-    pub tensor_layout: TensorLayout,
-}
-
-#[derive(Debug, Clone)]
+#[derive(Clone)]
 pub struct ModelStore {
     shards: HashMap<ShardId, Shard>,
     expert_definitions: HashMap<ExpertId, ExpertDefinition>,
@@ -54,15 +28,16 @@ impl ModelStore {
         })
     }
 
-    pub async fn load_shard(&self, shard_id: &ShardId) -> Option<&Shard> {
+    pub async fn load_shard(&mut self, shard_id: &ShardId) -> Option<Shard> {
+        // Check in-memory cache first
         if let Some(shard) = self.shards.get(shard_id) {
-            return Some(shard);
+            return Some(shard.clone());
         }
 
-        // Try to load from storage
+        // Load from persistent storage
         if let Ok(shard) = self.storage.get_shard(shard_id.clone()).await {
             self.shards.insert(shard_id.clone(), shard.clone());
-            return Some(&self.shards[shard_id]);
+            return Some(shard);
         }
 
         None
@@ -98,39 +73,4 @@ impl ModelStore {
         self.expert_definitions.clear();
         self.storage.clear().await
     }
-}
-
-#[derive(Debug, Clone)]
-pub struct Tensor {
-    pub data: Vec<f32>,
-    pub dimensions: Vec<u32>,
-}
-
-#[derive(Debug, Clone, PartialEq, Eq)]
-pub enum TensorDType {
-    FP32,
-    FP16,
-    INT8,
-    INT4,
-}
-
-#[derive(Debug, Clone)]
-pub struct TensorLayout {
-    pub shape: Vec<u32>,
-    pub strides: Vec<u32>,
-    pub dtype: TensorDType,
-}
-
-#[derive(Debug, Clone)]
-pub struct DevicePointer {
-    pub address: usize,
-    pub device_type: DeviceType,
-}
-
-#[derive(Debug, Clone, PartialEq, Eq)]
-pub enum DeviceType {
-    CPU,
-    CUDA,
-    ROCm,
-    Metal,
 }

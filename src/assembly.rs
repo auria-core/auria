@@ -5,13 +5,14 @@
 //     Implements the Expert Assembler (AEA) as defined in the specification.
 //
 use std::collections::HashMap;
-use std::sync::{Arc, Mutex};
+use std::sync::Arc;
+use tokio::sync::Mutex;
 use rand::Rng;
 use sha2::{Sha256, Digest};
 use crate::storage_interface::{Storage, StorageConfig, StorageBackend, EnhancedModelStore};
 use crate::license::{License, LicenseManager};
-use crate::execution::{Device, DevicePointer, DeviceType};
-use crate::core::{Shard, ShardId, ExpertId, ExpertDefinition, Tensor, TensorDType, ModelStore};
+use crate::execution::Device;
+use crate::core::{Shard, ShardId, ExpertId, ExpertDefinition, Tensor, TensorDType, ModelStore, DevicePointer, DeviceType};
 
 #[derive(Debug, Clone)]
 pub struct AssemblyRequest {
@@ -65,29 +66,36 @@ impl ExpertAssembler {
         // Retrieve shards
         let mut shards = Vec::new();
         for shard_id in &request.shard_ids {
-            let shard = self.model_store.lock().await.load_shard(shard_id).await
-                .ok_or(AssemblyError::MissingShard(*shard_id))?;
-            shards.push(shard.clone());
+            match self.model_store.lock().await.load_shard(shard_id).await {
+                Ok(shard) => shards.push(shard),
+                Err(_) => return Err(AssemblyError::MissingShard(*shard_id)),
+            }
         }
 
         // Validate licenses
         for shard in &shards {
-            let license = self.license_manager.lock().await.licenses.get(&shard.id.0)
-                .ok_or(AssemblyError::InvalidLicense(shard.id.clone()))?;
+            let license = {
+                let guard = self.license_manager.lock().await;
+                guard.licenses.get(&shard.id.0)
+                    .ok_or(AssemblyError::InvalidLicense(shard.id.clone()))?
+                    .clone()
+            };
 
-            if !self.license_manager.lock().await.validate_license(license) {
+            // For validation, we need to call validate_license which takes &self on LicenseManager.
+            // We can use a separate lock.
+            if !self.license_manager.lock().await.validate_license(&license) {
                 return Err(AssemblyError::InvalidLicense(shard.id.clone()));
             }
         }
 
         // Create assembly plan
-        let plan = self.create_assembly_plan(&request, &shards)?;
+        let plan = self.create_assembly_plan(&request, &shards).await?;
 
         // Construct tensor
         let tensor = self.construct_tensor(&plan, &shards)?;
 
         // Apply watermark
-        let tensor_with_watermark = self.apply_watermark(&tensor, &request.expert_id)?;
+        let tensor_with_watermark = self.apply_watermark(&tensor, &request.expert_id).await?;
 
         // Upload to device
         let device_pointer = self.upload_to_device(&tensor_with_watermark, &request.target_device)?;
@@ -107,10 +115,14 @@ impl ExpertAssembler {
         Ok(expert_tensor)
     }
 
-    fn create_assembly_plan(&self, request: &AssemblyRequest, shards: &[Shard]) -> Result<AssemblyPlan, AssemblyError> {
-        // Get expert definition
-        let expert_definition = self.model_store.lock().await.model_store.get_expert_definition(&request.expert_id)
-            .ok_or(AssemblyError::UnknownExpert(request.expert_id.clone()))?;
+    async fn create_assembly_plan(&self, request: &AssemblyRequest, shards: &[Shard]) -> Result<AssemblyPlan, AssemblyError> {
+        // Get expert definition (clone to avoid lifetime issues)
+        let expert_definition = {
+            let guard = self.model_store.lock().await;
+            guard.model_store.get_expert_definition(&request.expert_id)
+                .ok_or(AssemblyError::UnknownExpert(request.expert_id.clone()))?
+                .clone()
+        };
 
         // Verify shard count matches
         if expert_definition.shard_ids.len() != shards.len() {
@@ -157,7 +169,7 @@ impl ExpertAssembler {
         })
     }
 
-    fn apply_watermark(&self, tensor: &Tensor, expert_id: &ExpertId) -> Result<Tensor, AssemblyError> {
+    async fn apply_watermark(&self, tensor: &Tensor, expert_id: &ExpertId) -> Result<Tensor, AssemblyError> {
         // Generate deterministic watermark based on node identity and expert ID
         let mut hasher = Sha256::new();
         hasher.update(&self.license_manager.lock().await.node_identity);

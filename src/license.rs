@@ -7,7 +7,8 @@
 use std::collections::HashMap;
 use std::sync::{Arc, Mutex};
 use rand::Rng;
-use auria_security::crypto::{self, Signature as AuriaSignature, PublicKey as AuriaPublicKey};
+use auria_core::shard::{PublicKey, Signature};
+use auria_security::verify_signature;
 
 #[derive(Debug, Clone)]
 pub struct License {
@@ -19,8 +20,8 @@ pub struct License {
 
 #[derive(Debug, Clone)]
 pub struct LicenseManager {
-    licenses: HashMap<[u8; 32], License>,
-    node_identity: [u8; 32],
+    pub licenses: HashMap<[u8; 32], License>,
+    pub node_identity: [u8; 32],
 }
 
 impl LicenseManager {
@@ -60,16 +61,15 @@ impl LicenseManager {
 
     fn verify_signature(&self, license: &License) -> bool {
         // Get the node's public key from the license itself
-        let pubkey = AuriaPublicKey(license.node_pubkey);
-        let sig = AuriaSignature(license.signature);
+        let pubkey = PublicKey(license.node_pubkey);
+        let sig = Signature(license.signature);
 
         let mut data = Vec::new();
         data.extend_from_slice(&license.shard_id);
         data.extend_from_slice(&license.node_pubkey);
         data.extend_from_slice(&license.expiry_timestamp.to_le_bytes());
 
-        crypto::verify_signature(&pubkey, &data, &sig)
-            .unwrap_or(false)
+        verify_signature(&pubkey, &data, &sig).unwrap_or(false)
     }
 
     fn current_timestamp() -> u64 {
