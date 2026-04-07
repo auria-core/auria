@@ -6,10 +6,9 @@
 //     The core data types are defined in the `core` module.
 //
 use std::collections::HashMap;
-use std::sync::{Arc, Mutex};
 use auria_core::AuriaResult;
-use crate::core::{Shard, ShardId, ExpertId, ExpertDefinition, TensorDType};
-use crate::storage_interface::{Storage, StorageConfig, StorageBackend, StorageStats};
+use crate::core::{Shard, ShardId, ExpertId, ExpertDefinition};
+use crate::storage_interface::{Storage, StorageConfig, StorageStats};
 
 #[derive(Clone)]
 pub struct ModelStore {

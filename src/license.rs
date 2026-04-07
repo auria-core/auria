@@ -4,11 +4,10 @@
 //     License management subsystem for validating shard access authorization.
 //     Implements the License Manager (ALM) as defined in the specification.
 //
-use std::collections::HashMap;
-use std::sync::{Arc, Mutex};
-use rand::Rng;
 use auria_core::shard::{PublicKey, Signature};
 use auria_security::verify_signature;
+use rand::Rng;
+use std::collections::HashMap;
 
 #[derive(Debug, Clone)]
 pub struct License {

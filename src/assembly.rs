@@ -9,10 +9,10 @@ use std::sync::Arc;
 use tokio::sync::Mutex;
 use rand::Rng;
 use sha2::{Sha256, Digest};
-use crate::storage_interface::{Storage, StorageConfig, StorageBackend, EnhancedModelStore};
-use crate::license::{License, LicenseManager};
+use crate::storage_interface::EnhancedModelStore;
+use crate::license::LicenseManager;
 use crate::execution::Device;
-use crate::core::{Shard, ShardId, ExpertId, ExpertDefinition, Tensor, TensorDType, ModelStore, DevicePointer, DeviceType};
+use crate::core::{Shard, ShardId, ExpertId, Tensor, TensorDType, DevicePointer};
 
 #[derive(Debug, Clone)]
 pub struct AssemblyRequest {
@@ -134,7 +134,7 @@ impl ExpertAssembler {
 
         // Calculate total elements and tensor shape
         let mut total_elements: u64 = 0;
-        let mut tensor_shape = expert_definition.tensor_layout.shape.clone();
+        let tensor_shape = expert_definition.tensor_layout.shape.clone();
         let dtype = expert_definition.tensor_layout.dtype.clone();
 
         for shard in shards {
@@ -213,13 +213,13 @@ pub enum AssemblyError {
 impl std::fmt::Display for AssemblyError {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
-            AssemblyError::MissingShard(id) = > write!(f, "Missing shard: {:?}", id),
-            AssemblyError::InvalidLicense(id) = > write!(f, "Invalid license for shard: {:?}", id),
-            AssemblyError::UnknownExpert(id) = > write!(f, "Unknown expert: {:?}", id),
-            AssemblyError::ShardCountMismatch = > write!(f, "Shard count mismatch"),
-            AssemblyError::MemoryAllocationError = > write!(f, "Memory allocation failed"),
-            AssemblyError::DeviceUploadError = > write!(f, "Device upload failed"),
-            AssemblyError::WatermarkApplicationError = > write!(f, "Watermark application failed"),
+            AssemblyError::MissingShard(id) => write!(f, "Missing shard: {:?}", id),
+            AssemblyError::InvalidLicense(id) => write!(f, "Invalid license for shard: {:?}", id),
+            AssemblyError::UnknownExpert(id) => write!(f, "Unknown expert: {:?}", id),
+            AssemblyError::ShardCountMismatch => write!(f, "Shard count mismatch"),
+            AssemblyError::MemoryAllocationError => write!(f, "Memory allocation failed"),
+            AssemblyError::DeviceUploadError => write!(f, "Device upload failed"),
+            AssemblyError::WatermarkApplicationError => write!(f, "Watermark application failed"),
         }
     }
 }

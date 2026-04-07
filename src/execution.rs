@@ -6,10 +6,9 @@
 //
 use std::collections::HashMap;
 use std::sync::{Arc, Mutex};
-use uuid::Uuid;
 
-use crate::core::{Tensor, DevicePointer, DeviceType};
-use crate::assembly::{ExpertTensor, AssemblyRequest};
+use crate::assembly::ExpertTensor;
+use crate::core::{DeviceType, Tensor};
 
 #[derive(Debug, Clone)]
 pub struct Device {
@@ -74,15 +73,22 @@ impl ExecutionCore {
 
     pub fn execute(&self, request: ExecutionRequest) -> Result<ExecutionResult, ExecutionError> {
         // Select appropriate backend
-        let backend_type = self.select_backend(&request.execution_context.backend, &request.expert_tensors)?;
-        let backend = self.backends.get(&backend_type)
+        let backend_type =
+            self.select_backend(&request.execution_context.backend, &request.expert_tensors)?;
+        let backend = self
+            .backends
+            .get(&backend_type)
             .ok_or(ExecutionError::BackendNotAvailable(backend_type.clone()))?;
 
         // Initialize backend
         let backend_instance = backend.initialize(&request.execution_context.device)?;
 
         // Execute
-        let result = backend.execute(&backend_instance, &request.input_tensor, &request.expert_tensors)?;
+        let result = backend.execute(
+            &backend_instance,
+            &request.input_tensor,
+            &request.expert_tensors,
+        )?;
 
         // Shutdown backend
         backend.shutdown(backend_instance);
@@ -90,9 +96,19 @@ impl ExecutionCore {
         Ok(result)
     }
 
-    fn select_backend(&self, requested_backend: &BackendType, expert_tensors: &[ExpertTensor]) -> Result<BackendType, ExecutionError> {
+    fn select_backend(
+        &self,
+        requested_backend: &BackendType,
+        _expert_tensors: &[ExpertTensor],
+    ) -> Result<BackendType, ExecutionError> {
         // Priority order: Cluster > GPU > CPU
-        let priority_order = [BackendType::Cluster, BackendType::CUDA, BackendType::ROCm, BackendType::Metal, BackendType::CPU];
+        let priority_order = [
+            BackendType::Cluster,
+            BackendType::CUDA,
+            BackendType::ROCm,
+            BackendType::Metal,
+            BackendType::CPU,
+        ];
 
         for backend_type in priority_order.iter() {
             if *backend_type == BackendType::Cluster {
@@ -143,7 +159,9 @@ pub enum ExecutionError {
 impl std::fmt::Display for ExecutionError {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
-            ExecutionError::BackendNotAvailable(backend) => write!(f, "Backend not available: {:?}", backend),
+            ExecutionError::BackendNotAvailable(backend) => {
+                write!(f, "Backend not available: {:?}", backend)
+            }
             ExecutionError::MemoryAllocationError => write!(f, "Memory allocation failed"),
             ExecutionError::DeviceInitializationError => write!(f, "Device initialization failed"),
             ExecutionError::ExecutionFailed => write!(f, "Execution failed"),
@@ -185,7 +203,10 @@ impl ExecutionBackend for CPUBackend {
         let mut output_data = input.data.clone();
         for expert in experts {
             // Add expert tensor data to output (simplified)
-            for i in 0..output_data.len().min(expert.shape.iter().product::<u32>() as usize) {
+            for i in 0..output_data
+                .len()
+                .min(expert.shape.iter().product::<u32>() as usize)
+            {
                 output_data[i] += 0.1; // Simplified operation
             }
         }
@@ -237,7 +258,10 @@ impl ExecutionBackend for CUDABackend {
         // Simulate CUDA execution
         let mut output_data = input.data.clone();
         for expert in experts {
-            for i in 0..output_data.len().min(expert.shape.iter().product::<u32>() as usize) {
+            for i in 0..output_data
+                .len()
+                .min(expert.shape.iter().product::<u32>() as usize)
+            {
                 output_data[i] += 0.2; // Simplified CUDA operation
             }
         }
@@ -287,7 +311,10 @@ impl ExecutionBackend for ROCmBackend {
 
         let mut output_data = input.data.clone();
         for expert in experts {
-            for i in 0..output_data.len().min(expert.shape.iter().product::<u32>() as usize) {
+            for i in 0..output_data
+                .len()
+                .min(expert.shape.iter().product::<u32>() as usize)
+            {
                 output_data[i] += 0.15; // Simplified ROCm operation
             }
         }
@@ -337,7 +364,10 @@ impl ExecutionBackend for MetalBackend {
 
         let mut output_data = input.data.clone();
         for expert in experts {
-            for i in 0..output_data.len().min(expert.shape.iter().product::<u32>() as usize) {
+            for i in 0..output_data
+                .len()
+                .min(expert.shape.iter().product::<u32>() as usize)
+            {
                 output_data[i] += 0.25; // Simplified Metal operation
             }
         }
@@ -372,7 +402,8 @@ impl DeviceRegistry {
     }
 
     pub fn register_device(&mut self, device: Device) {
-        self.devices.entry(device.device_type.clone())
+        self.devices
+            .entry(device.device_type.clone())
             .or_insert_with(Vec::new)
             .push(device);
     }
