@@ -5,7 +5,7 @@
 //     Implements the Execution Core (AXC) as defined in the specification.
 //
 use std::collections::HashMap;
-use std::sync::{Arc, Mutex};
+use std::sync::Arc;
 
 use crate::assembly::ExpertTensor;
 use crate::core::{DeviceType, Tensor};
@@ -52,7 +52,6 @@ pub enum BackendType {
 
 pub struct ExecutionCore {
     backends: HashMap<BackendType, Arc<dyn ExecutionBackend>>,
-    device_registry: Arc<Mutex<DeviceRegistry>>,
 }
 
 impl ExecutionCore {
@@ -67,7 +66,6 @@ impl ExecutionCore {
 
         Self {
             backends,
-            device_registry: Arc::new(Mutex::new(DeviceRegistry::new())),
         }
     }
 
